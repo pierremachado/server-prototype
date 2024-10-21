@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  client_api:
+    build: .               # Usa o Dockerfile no diretório raiz
+    environment:
+      - SERVICE_TYPE=client_api    # Configura para rodar a API (Servidor A)
+    ports:
+      - "8080:8080"
+    networks:
+      - network-a
+      - network-c           # Adiciona a network-c para comunicar-se com a Communication API
+
+  server_a:
+    build: .               # Usa o Dockerfile no diretório raiz
+    environment:
+      - SERVICE_TYPE=server_a # Configura para rodar o servidor A (letras de A-M)
+    ports:
+      - "8081:8081"
+    networks:
+      - network-a           # Rede principal do servidor A
+      - network-c           # Adiciona a network-c para comunicação com a Communication API
+
+  server_b:
+    build: .               # Usa o Dockerfile no diretório raiz
+    environment:
+      - SERVICE_TYPE=server_b # Configura para rodar o servidor B (letras de N-Z)
+    ports:
+      - "8082:8082"
+    networks:
+      - network-b           # Rede principal do servidor B
+      - network-c           # Adiciona a network-c para permitir comunicação via Communication API
+
+  communication_api:
+    build: .               # Usa o Dockerfile no diretório raiz
+    environment:
+      - SERVICE_TYPE=communication_api    # Configura para rodar a API de comunicação (Communication API)
+    ports:
+      - "8083:8083"
+    networks:
+      - network-c           # Comunicação entre A e B passa por essa API
+
+  client:
+    build: .               # Usa o Dockerfile no diretório raiz
+    networks:
+      - network-client      # Cliente está na rede cliente para ser interativo com os usuários
+      - network-a           # Precisa acessar a API e servidor A através da network-a
+    stdin_open: true        # Mantém o STDIN aberto para entrada interativa
+    tty: true               # Aloca um pseudo-terminal (tty) para o container
+    environment:
+      - SERVICE_TYPE=client # Configura para rodar o cliente
+
+networks:
+  network-a:
+    driver: bridge
+  network-b:
+    driver: bridge
+  network-c:
+    driver: bridge
+  network-client:
+    driver: bridge
